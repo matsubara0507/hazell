@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 817de5a2e9b62f9bf540d897da44641fe74b514ddc5bcef23ddf2953d62a4693
+-- hash: ae6c37713d16fb881513f02938b1acd318e091e282d8d66a4464f3b2c5fb33f9
 
 name:           hazell
 version:        0.1.0.0
@@ -27,8 +27,8 @@ source-repository head
 
 library
   exposed-modules:
-      Bazel.Haskell.StackSnapshot
-      Bazel.Workspace
+      Bazel.Haskell
+      Bazel.Rule
       Hazell
   other-modules:
       Paths_hazell
@@ -36,6 +36,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , hpack
     , prettyprinter
   default-language: Haskell2010
@@ -48,6 +49,7 @@ executable hazell
       app
   build-depends:
       base >=4.7 && <5
+    , containers
     , hazell
     , hpack
     , prettyprinter
@@ -62,6 +64,7 @@ test-suite hazell-test
       test
   build-depends:
       base >=4.7 && <5
+    , containers
     , hazell
     , hpack
     , prettyprinter

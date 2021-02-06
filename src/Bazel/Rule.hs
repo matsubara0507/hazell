@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Bazel.Workspace
+module Bazel.Rule
     ( Workspace (..)
     , Rule (..)
     , RuleArg (..)
