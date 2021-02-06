@@ -1,6 +1,10 @@
 module Main where
 
-import Hazell
+import Data.Maybe (fromMaybe, listToMaybe)
+import qualified Hazell
+import System.Environment (getArgs)
 
 main :: IO ()
-main = someFunc
+main = do
+  path <- listToMaybe <$> getArgs
+  Hazell.generate (fromMaybe "." path)

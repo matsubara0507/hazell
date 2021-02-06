@@ -13,12 +13,14 @@ description:         Please see the README on GitHub at <https://github.com/mats
 
 dependencies:
 - base >= 4.7 && < 5
+- hpack
+- prettyprinter
 
 library:
   source-dirs: src
 
 executables:
-  hazell-exe:
+  hazell:
     main:                Main.hs
     source-dirs:         app
     dependencies:
