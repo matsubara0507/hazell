@@ -15,7 +15,9 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - hpack
+- megaparsec
 - prettyprinter
+- text
 
 library:
   source-dirs: src

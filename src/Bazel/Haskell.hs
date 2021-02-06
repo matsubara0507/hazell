@@ -32,8 +32,8 @@ buildHaskellLibraryRule package = Rule { .. }
     buildRuleArgs (Just lib) =
       [ (Just "name", RuleArgString $ Hpack.packageName package <> "-library")
       , (Just "src_strip_prefix", RuleArgString $ head (Hpack.sectionSourceDirs lib))
-      , (Just "srcs", RuleArgExp $ "glob('" <> head (Hpack.sectionSourceDirs lib) <> "/**/*.hs')")
+      , (Just "srcs", RuleArgGlob $ head (Hpack.sectionSourceDirs lib) <> "/**/*.hs")
       , (Just "deps", RuleArgArray $ map RuleArgString (dependencies lib))
-      , (Just "compiler_flags", RuleArgExp "GHC_FLAGS")
+      , (Just "compiler_flags", RuleArgConst "GHC_FLAGS")
       ]
     dependencies lib = Map.keys (Hpack.unDependencies $ Hpack.sectionDependencies lib)

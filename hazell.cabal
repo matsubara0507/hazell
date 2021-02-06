@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ae6c37713d16fb881513f02938b1acd318e091e282d8d66a4464f3b2c5fb33f9
+-- hash: be367d5e8b3f2e541063c2d49d7a6108a03c627f52968e54225f5fd459918b63
 
 name:           hazell
 version:        0.1.0.0
@@ -27,7 +27,9 @@ source-repository head
 
 library
   exposed-modules:
+      Bazel.Build
       Bazel.Haskell
+      Bazel.Parser
       Bazel.Rule
       Hazell
   other-modules:
@@ -38,7 +40,9 @@ library
       base >=4.7 && <5
     , containers
     , hpack
+    , megaparsec
     , prettyprinter
+    , text
   default-language: Haskell2010
 
 executable hazell
@@ -52,7 +56,9 @@ executable hazell
     , containers
     , hazell
     , hpack
+    , megaparsec
     , prettyprinter
+    , text
   default-language: Haskell2010
 
 test-suite hazell-test
@@ -67,5 +73,7 @@ test-suite hazell-test
     , containers
     , hazell
     , hpack
+    , megaparsec
     , prettyprinter
+    , text
   default-language: Haskell2010

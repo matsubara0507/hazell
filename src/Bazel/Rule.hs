@@ -20,11 +20,13 @@ data Rule = Rule
   , ruleArgs :: [(Maybe String, RuleArg)]
   } deriving (Show, Eq)
 
+-- ToDo: Dict type
 data RuleArg
   = RuleArgString String
   | RuleArgBool Bool
   | RuleArgArray [RuleArg]
-  | RuleArgExp String
+  | RuleArgConst String
+  | RuleArgGlob String
   deriving (Show, Eq)
 
 instance Pretty Rule where
@@ -38,7 +40,8 @@ instance Pretty RuleArg where
   pretty (RuleArgBool True)  = "True"
   pretty (RuleArgBool False) = "False"
   pretty (RuleArgArray args) = vsep [nest 4 $ vsep ("[" : map ((<> ",") . pretty) args), "]"]
-  pretty (RuleArgExp expr)   = fromString expr
+  pretty (RuleArgConst name) = fromString name
+  pretty (RuleArgGlob path)  = "glob([" <> fromString (show path) <> "])"
 
 prettyMethodCall :: String -> [Doc ann] -> Doc ann
 prettyMethodCall name args =
