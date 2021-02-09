@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: be367d5e8b3f2e541063c2d49d7a6108a03c627f52968e54225f5fd459918b63
+-- hash: 3e8db413b4d7c2b9e90657250e556b331b60d4a3684585ea944fade34931331c
 
 name:           hazell
-version:        0.1.0.0
+version:        0.1.0
 description:    Please see the README on GitHub at <https://github.com/matsubara0507/hazell#readme>
 homepage:       https://github.com/matsubara0507/hazell#readme
 bug-reports:    https://github.com/matsubara0507/hazell/issues
