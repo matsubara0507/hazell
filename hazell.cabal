@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3e8db413b4d7c2b9e90657250e556b331b60d4a3684585ea944fade34931331c
+-- hash: 8680a99e272afed47b19f772f7a1c7eae434d0c29782cb3baacd0f6ccf2d8ae4
 
 name:           hazell
 version:        0.1.0
@@ -32,6 +32,7 @@ library
       Bazel.Parser
       Bazel.Rule
       Hazell
+      Hazell.Env
   other-modules:
       Paths_hazell
   hs-source-dirs:
