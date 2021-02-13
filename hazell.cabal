@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8680a99e272afed47b19f772f7a1c7eae434d0c29782cb3baacd0f6ccf2d8ae4
+-- hash: 4d8bd6b85928de78c72911a68958b760e2fb8d6d2e0d9adeba0a9ccbcee78bfb
 
 name:           hazell
 version:        0.1.0
@@ -40,6 +40,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , hpack
     , megaparsec
     , prettyprinter
@@ -55,6 +56,7 @@ executable hazell
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , hazell
     , hpack
     , megaparsec
@@ -72,6 +74,7 @@ test-suite hazell-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , hazell
     , hpack
     , megaparsec

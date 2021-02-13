@@ -1,0 +1,28 @@
+# Set all target’s visibility in this package to "public".
+package(default_visibility = ["//visibility:public"])
+
+load(
+    "//:build/common.bzl",
+    "GHC_FLAGS",
+)
+
+load(
+    "@rules_haskell//haskell:defs.bzl",
+    "haskell_library",
+)
+
+haskell_library(
+    name = "hazell-library",
+    src_strip_prefix = "src",
+    srcs = glob(["src/**/*.hs"]),
+    deps = [
+        "base",
+        "containers",
+        "filepath",
+        "hpack",
+        "megaparsec",
+        "prettyprinter",
+        "text",
+    ],
+    compiler_flags = GHC_FLAGS,
+)

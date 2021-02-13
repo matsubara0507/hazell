@@ -22,6 +22,7 @@ buildStackSnapshotRule package localSnapshot = Rule { .. }
     dependencies =
       filter (/= Hpack.packageName package) $ map fst (Hpack.packageDependencies package)
 
+-- ToDo: GHC_FLAGS
 buildHaskellLibraryRule :: Hpack.Package -> Rule
 buildHaskellLibraryRule package = Rule { .. }
   where

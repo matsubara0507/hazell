@@ -5,4 +5,6 @@ module Hazell.Env
 data Env = Env
   { packageYamlPath :: FilePath
   , stackYamlPath :: FilePath
+  , bazelProjectPath :: FilePath
+  , bazelBuildPath :: FilePath
   }

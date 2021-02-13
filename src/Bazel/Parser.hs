@@ -5,6 +5,7 @@ module Bazel.Parser where
 
 import Bazel.Build (BuildFile, BuildContent (..))
 import Bazel.Rule (RuleArg (..))
+import Control.Monad (MonadPlus)
 import Data.Functor (($>))
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -39,11 +40,11 @@ buildRuleParser = do
   name <- nameParser
   char '('
   space
-  args <- (buildRuleArgWithNameParser <|> buildRuleArgWithoutNameParser) `sepBy` comma
-  space
-  char ')'
-  newline
+  args <- argParser `sepAndEndBy` (comma, space >> char ')')
+  optional newline
   pure $ BuildRule (Text.pack name) args
+  where
+    argParser = buildRuleArgWithNameParser <|> buildRuleArgWithoutNameParser
 
 buildNewlineParser :: Parser BuildContent
 buildNewlineParser = do
@@ -79,9 +80,7 @@ buildRuleArgArrayParser :: Parser RuleArg
 buildRuleArgArrayParser = do
   char '['
   space
-  arr <- buildRuleArgParser `sepBy` comma
-  space
-  char ']'
+  arr <- buildRuleArgParser `sepAndEndBy` (comma, space >> char ']')
   pure $ RuleArgArray arr
 
 buildRuleArgConstParser :: Parser RuleArg
@@ -95,7 +94,7 @@ buildRuleArgGlobParser = do
   pure $ RuleArgGlob path
 
 nameParser :: Parser String
-nameParser = many (letterChar <|> digitChar <|> char '_')
+nameParser = some (letterChar <|> digitChar <|> char '_')
 
 comma :: Parser ()
 comma = do
@@ -109,3 +108,17 @@ stringLitParser = do
   str <- takeWhile1P Nothing (/= '"') -- ToDo: escape "
   char '"'
   pure $ Text.unpack str
+
+-- allow tail-sep
+sepAndEndBy :: MonadPlus m => m a -> (m sep, m end) -> m [a]
+sepAndEndBy p (sep, end) = go
+  where
+    go = do
+      r <- optional p
+      case r of
+        Nothing -> end $> []
+        Just x -> do
+          s <- optional sep
+          case s of
+            Nothing -> end $> [x]
+            Just _  -> (x:) <$> go

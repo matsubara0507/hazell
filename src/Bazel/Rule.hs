@@ -4,10 +4,13 @@ module Bazel.Rule
     ( Workspace (..)
     , Rule (..)
     , RuleArg (..)
+    , prettyMethodCall
+    , prettyMethodArg
+    , isStringArg
     ) where
 
-import Prettyprinter
 import Data.String (fromString)
+import Prettyprinter
 
 data Workspace = Workspace
   { workspaceName :: String
@@ -36,17 +39,24 @@ instance Pretty Rule where
       callRule = prettyMethodCall name (map prettyMethodArg args)
 
 instance Pretty RuleArg where
-  pretty (RuleArgString str) = fromString (show str)
-  pretty (RuleArgBool True)  = "True"
-  pretty (RuleArgBool False) = "False"
-  pretty (RuleArgArray args) = vsep [nest 4 $ vsep ("[" : map ((<> ",") . pretty) args), "]"]
-  pretty (RuleArgConst name) = fromString name
-  pretty (RuleArgGlob path)  = "glob([" <> fromString (show path) <> "])"
+  pretty (RuleArgString str)  = fromString (show str)
+  pretty (RuleArgBool True)   = "True"
+  pretty (RuleArgBool False)  = "False"
+  pretty (RuleArgArray [])    = "[]"
+  pretty (RuleArgArray [arg]) = "[" <> pretty arg <> "]"
+  pretty (RuleArgArray args)  = vsep [nest 4 $ vsep ("[" : map ((<> ",") . pretty) args), "]"]
+  pretty (RuleArgConst name)  = fromString name
+  pretty (RuleArgGlob path)   = "glob([" <> fromString (show path) <> "])"
 
 prettyMethodCall :: String -> [Doc ann] -> Doc ann
-prettyMethodCall name args =
-  vsep [nest 4 $ vsep (fromString name <> "(" : map (<> ",") args), ")"]
+prettyMethodCall name []    = fromString name <> "()"
+prettyMethodCall name [arg] = fromString name <> "(" <> arg <> ")"
+prettyMethodCall name args  = vsep [nest 4 $ vsep (fromString name <> "(" : map (<> ",") args), ")"]
 
 prettyMethodArg :: (Maybe String, RuleArg) -> Doc ann
 prettyMethodArg (Nothing, val)  = pretty val
 prettyMethodArg (Just key, val) = fromString key <+> "=" <+> pretty val
+
+isStringArg :: String -> RuleArg -> Bool
+isStringArg str (RuleArgString str') = str == str'
+isStringArg _ _                      = False
