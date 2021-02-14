@@ -40,4 +40,4 @@ jobs:
       run: stack --system-ghc build
 
     - name: Exec application
-      run: stack exec -- hazell example
+      run: stack --system-ghc exec -- hazell example
