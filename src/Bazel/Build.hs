@@ -35,7 +35,7 @@ isRule _ _                     = False
 
 isLoadRule :: BuildContent -> Rule -> Bool
 isLoadRule (BuildRule "load" ((_, RuleArgString load) : args)) rule =
-  load == ruleDef rule && any (isStringArg (ruleName rule) . snd) args
+  load == ruleDef rule && any ((`isStringArg` ruleName rule) . snd) args
 isLoadRule _ _ =
   False
 

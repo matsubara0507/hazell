@@ -57,6 +57,6 @@ prettyMethodArg :: (Maybe String, RuleArg) -> Doc ann
 prettyMethodArg (Nothing, val)  = pretty val
 prettyMethodArg (Just key, val) = fromString key <+> "=" <+> pretty val
 
-isStringArg :: String -> RuleArg -> Bool
-isStringArg str (RuleArgString str') = str == str'
+isStringArg :: RuleArg -> String -> Bool
+isStringArg (RuleArgString str) str' = str == str'
 isStringArg _ _                      = False

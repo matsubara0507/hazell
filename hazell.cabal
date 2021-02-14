@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4d8bd6b85928de78c72911a68958b760e2fb8d6d2e0d9adeba0a9ccbcee78bfb
+-- hash: fd7fce8beb5cd381d0810d61e25e12840e23f917b76da1f01bc21f50eb0e222b
 
 name:           hazell
 version:        0.1.0
@@ -68,6 +68,10 @@ test-suite hazell-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Helper
+      Spec.Bazel.Build
+      Spec.Bazel.Parser
+      Spec.Bazel.Rule
       Paths_hazell
   hs-source-dirs:
       test
@@ -76,8 +80,11 @@ test-suite hazell-test
     , containers
     , filepath
     , hazell
+    , here
     , hpack
     , megaparsec
     , prettyprinter
+    , tasty
+    , tasty-hunit
     , text
   default-language: Haskell2010

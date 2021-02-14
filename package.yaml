@@ -36,3 +36,6 @@ tests:
     source-dirs:         test
     dependencies:
     - hazell
+    - here
+    - tasty
+    - tasty-hunit
