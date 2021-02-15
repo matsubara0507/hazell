@@ -120,19 +120,19 @@ tests = testGroup "Bazel.Parser"
   ]
 
 arrayExample1, arrayExample2, failArrayExample :: Text
-arrayExample1 = pack [here|
+arrayExample1 = pack $ filter (/= '\r') [here|
 [
     True,
     True
 ]
 |]
-arrayExample2 = pack [here|
+arrayExample2 = pack $ filter (/= '\r') [here|
 [
     True,
     True,
 ]
 |]
-failArrayExample = pack [here|
+failArrayExample = pack $ filter (/= '\r') [here|
 [
     True
     True
@@ -140,7 +140,7 @@ failArrayExample = pack [here|
 |]
 
 example :: Text
-example = pack [here|
+example = pack $ filter (/= '\r') [here|
 workspace(name = "sample")
 
 # Load the repository rule to download an http archive.

@@ -42,7 +42,7 @@ tests = testGroup "Bazel.Rule"
   ]
 
 example1, example2, example3 :: String
-example1 = [here|
+example1 = filter (/= '\r') [here|
 load(
     "@hoge/def.bzl",
     "hoge",
@@ -51,7 +51,7 @@ load(
 hoge("hogege")
 |]
 
-example2 = [here|
+example2 = filter (/= '\r') [here|
 load(
     "@hoge/def.bzl",
     "hoge",
@@ -60,7 +60,7 @@ load(
 hoge()
 |]
 
-example3 = [here|
+example3 = filter (/= '\r') [here|
 load(
     "@hoge/def.bzl",
     "hoge",

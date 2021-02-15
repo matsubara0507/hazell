@@ -56,13 +56,13 @@ tests = testGroup "Bazel.Build"
 
 
 example1, example2, example3 :: String
-example1 = [here|
+example1 = filter (/= '\r') [here|
 hoge()
 |]
-example2 = [here|
+example2 = filter (/= '\r') [here|
 hoge("hogege1")
 |]
-example3 = [here|
+example3 = filter (/= '\r') [here|
 hoge(
     "hogege1",
     hogege = "hogege2",
