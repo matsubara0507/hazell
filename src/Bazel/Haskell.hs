@@ -37,4 +37,5 @@ buildHaskellLibraryRule package = Rule { .. }
       , (Just "deps", RuleArgArray $ map RuleArgString (dependencies lib))
       , (Just "compiler_flags", RuleArgConst "GHC_FLAGS")
       ]
-    dependencies lib = Map.keys (Hpack.unDependencies $ Hpack.sectionDependencies lib)
+    dependencies lib =
+      map ("@stackage//:" <>)$ Map.keys (Hpack.unDependencies $ Hpack.sectionDependencies lib)
