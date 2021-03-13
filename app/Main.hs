@@ -37,7 +37,7 @@ filePathOption
   -> FilePath        -- ^ file name for explanation of option
   -> OptDescr a
 filePathOption optStr f defaultPath fileName =
-  filePathOption optStr f defaultPath $ "PATH for " ++ fileName ++ " (default is " ++ defaultPath ++ ")"
+  filePathOption' optStr f defaultPath $ "PATH for " ++ fileName ++ " (default is " ++ defaultPath ++ ")"
 
 filePathOption'
   :: String          -- ^ long option string
