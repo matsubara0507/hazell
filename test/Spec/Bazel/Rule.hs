@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Spec.Bazel.Rule
   ( tests
   ) where
 
-import Bazel.Rule
-import Data.String.Here
-import Helper (assertPrettyEqual)
-import Test.Tasty
-import Test.Tasty.HUnit
+import           Bazel.Rule
+import           Data.String.Here
+import           Helper           (assertPrettyEqual)
+import           Test.Tasty
+import           Test.Tasty.HUnit
 
 tests :: TestTree
 tests = testGroup "Bazel.Rule"
@@ -20,7 +20,7 @@ tests = testGroup "Bazel.Rule"
         False @=? (RuleArgBool True `isStringArg` "hoge")
         False @=? (RuleArgArray [] `isStringArg` "hoge")
     ]
-  , testGroup "pretty (Pretty instance)" 
+  , testGroup "pretty (Pretty instance)"
     [ testCase "Rule type" $ do
         example1 `assertPrettyEqual` Rule "hoge" "@hoge/def.bzl" [(Nothing, RuleArgString "hogege")]
         example2 `assertPrettyEqual` Rule "hoge" "@hoge/def.bzl" []

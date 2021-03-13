@@ -1,25 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Spec.Bazel.Parser
   ( tests
   ) where
 
-import Bazel.Build
-import Bazel.Parser
-import Bazel.Rule
-import Data.String.Here
-import Data.Text (Text, pack)
-import Helper (assertPrettyEqual)
-import Test.Tasty
-import Test.Tasty.HUnit
-import Text.Megaparsec (parseMaybe)
+import           Bazel.Build
+import           Bazel.Parser
+import           Bazel.Rule
+import           Data.String.Here
+import           Data.Text        (Text, pack)
+import           Helper           (assertPrettyEqual)
+import           Test.Tasty
+import           Test.Tasty.HUnit
+import           Text.Megaparsec  (parseMaybe)
 
 tests :: TestTree
 tests = testGroup "Bazel.Parser"
   [ testGroup "parseBuildFile"
     [ testCase "example" $
-        parseBuildFile example @?= Just 
+        parseBuildFile example @?= Just
           [ BuildRule "workspace" [(Just "name", RuleArgString "sample")]
           , BuildNewline,BuildComment " Load the repository rule to download an http archive."
           , BuildRule "load" [(Nothing, RuleArgString "@bazel_tools//tools/build_defs/repo:http.bzl"), (Nothing, RuleArgString "http_archive")]
@@ -46,7 +46,7 @@ tests = testGroup "Bazel.Parser"
           , BuildNewline
           , BuildRule "stack_snapshot"
               [ (Just "name", RuleArgString "stackage")
-              , (Just "packages", RuleArgArray 
+              , (Just "packages", RuleArgArray
                   [ RuleArgString "base"
                   , RuleArgString "containers"
                   , RuleArgString "filepath"
@@ -59,7 +59,7 @@ tests = testGroup "Bazel.Parser"
               ]
           ]
     ]
-  , testGroup "buildCommentParser" 
+  , testGroup "buildCommentParser"
     [ testCase "success" $ do
         parseMaybe buildCommentParser "# abc\n" @?= Just (BuildComment " abc")
         parseMaybe buildCommentParser "#abc\n" @?= Just (BuildComment "abc")
@@ -68,13 +68,13 @@ tests = testGroup "Bazel.Parser"
         parseMaybe buildCommentParser "# abc" @?= Nothing
         parseMaybe buildCommentParser "abc\n" @?= Nothing
     ]
-  , testGroup "buildNewlineParser" 
+  , testGroup "buildNewlineParser"
     [ testCase "success" $
         parseMaybe buildNewlineParser "\n" @?= Just BuildNewline
     , testCase "failure" $
         parseMaybe buildNewlineParser "abc\n" @?= Nothing
     ]
-  , testGroup "buildRuleArgArrayParser" 
+  , testGroup "buildRuleArgArrayParser"
     [ testCase "success" $ do
         parseMaybe buildRuleArgArrayParser "[]" @?= Just (RuleArgArray [])
         parseMaybe buildRuleArgArrayParser "[\n]" @?= Just (RuleArgArray [])
@@ -87,7 +87,7 @@ tests = testGroup "Bazel.Parser"
         parseMaybe buildRuleArgArrayParser "[" @?= Nothing
         parseMaybe buildRuleArgArrayParser failArrayExample @?= Nothing
     ]
-  , testGroup "buildRuleArgBoolParser" 
+  , testGroup "buildRuleArgBoolParser"
     [ testCase "success" $ do
         parseMaybe buildRuleArgBoolParser "True" @?= Just (RuleArgBool True)
         parseMaybe buildRuleArgBoolParser "False" @?= Just (RuleArgBool False)
@@ -102,15 +102,15 @@ tests = testGroup "Bazel.Parser"
         parseMaybe buildRuleArgStringParser "\"\"" @?= Nothing
         parseMaybe buildRuleArgStringParser "\"" @?= Nothing
     ]
-  , testGroup "buildRuleArgGlobParser" 
-    [ testCase "success" $ 
+  , testGroup "buildRuleArgGlobParser"
+    [ testCase "success" $
         parseMaybe buildRuleArgGlobParser "glob([\"src/**/*.hs\"])" @?= Just (RuleArgGlob "src/**/*.hs")
     , testCase "failure" $ do
         parseMaybe buildRuleArgGlobParser "glob([])" @?= Nothing
         parseMaybe buildRuleArgGlobParser "glob([\"\"])" @?= Nothing
         parseMaybe buildRuleArgGlobParser "glob(['src/**/*.hs'])" @?= Nothing
     ]
-  , testGroup "buildRuleArgConstParser" 
+  , testGroup "buildRuleArgConstParser"
     [ testCase "success" $ do
         parseMaybe buildRuleArgConstParser "HOGE_GE" @?= Just (RuleArgConst "HOGE_GE")
         parseMaybe buildRuleArgConstParser "abc123_" @?= Just (RuleArgConst "abc123_")

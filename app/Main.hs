@@ -1,20 +1,20 @@
 module Main where
 
-import Paths_hazell (version)
+import           Paths_hazell          (version)
 
-import Data.Maybe (fromMaybe, listToMaybe)
-import Data.Version (Version)
-import qualified Data.Version as Version
+import           Data.Maybe            (fromMaybe, listToMaybe)
+import           Data.Version          (Version)
+import qualified Data.Version          as Version
 import qualified Hazell
-import qualified Hazell.Env as Hazell
-import System.Console.GetOpt
-import System.Environment (getArgs)
+import qualified Hazell.Env            as Hazell
+import           System.Console.GetOpt
+import           System.Environment    (getArgs)
 
 main :: IO ()
 main = do
   args <- getArgs
   case getOpt Permute opts args of
-    (o, n, [])      -> cmd o n
+    (o, n, [])    -> cmd o n
     (_, _, err:_) -> mapM_ putStrLn [err, usage]
   where
     opts =

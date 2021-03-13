@@ -9,10 +9,10 @@ module Bazel.Build
     , fromRule
     ) where
 
-import Bazel.Rule
-import Data.String (fromString)
-import Data.Text (Text, pack, unpack)
-import Prettyprinter
+import           Bazel.Rule
+import           Data.String   (fromString)
+import           Data.Text     (Text, pack, unpack)
+import           Prettyprinter
 
 type BuildFile = [BuildContent]
 

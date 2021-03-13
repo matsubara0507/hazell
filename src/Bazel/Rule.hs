@@ -9,17 +9,17 @@ module Bazel.Rule
     , isStringArg
     ) where
 
-import Data.String (fromString)
-import Prettyprinter
+import           Data.String   (fromString)
+import           Prettyprinter
 
 data Workspace = Workspace
-  { workspaceName :: String
+  { workspaceName  :: String
   , workspaceRules :: [Rule]
   } deriving (Show, Eq)
 
 data Rule = Rule
   { ruleName :: String
-  , ruleDef :: String
+  , ruleDef  :: String
   , ruleArgs :: [(Maybe String, RuleArg)]
   } deriving (Show, Eq)
 

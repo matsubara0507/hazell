@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Spec.Bazel.Build
   ( tests
   ) where
 
-import Bazel.Build
-import Bazel.Rule
-import Data.String.Here
-import Helper (assertPrettyEqual)
-import Test.Tasty
-import Test.Tasty.HUnit
+import           Bazel.Build
+import           Bazel.Rule
+import           Data.String.Here
+import           Helper           (assertPrettyEqual)
+import           Test.Tasty
+import           Test.Tasty.HUnit
 
 tests :: TestTree
 tests = testGroup "Bazel.Build"
@@ -23,7 +23,7 @@ tests = testGroup "Bazel.Build"
     ]
   , testGroup "isLoadRule" $
     let
-      loadRule = 
+      loadRule =
         BuildRule "load" [(Nothing, RuleArgString "@hoge/def.bzl"), (Nothing, RuleArgString "hoge")]
     in
       [ testCase "examples" $ do
@@ -34,7 +34,7 @@ tests = testGroup "Bazel.Build"
       ]
   , testGroup "fromRule" $
     let
-      rule = 
+      rule =
         Rule "hoge" "@hoge/def.bzl" [(Just "hogege", RuleArgString "hogege")]
       loadHogeRule =
         BuildRule "load" [(Nothing, RuleArgString "@hoge/def.bzl"), (Nothing, RuleArgString "hoge")]
@@ -44,7 +44,7 @@ tests = testGroup "Bazel.Build"
       [ testCase "example" $
           (loadHogeRule, hogeRule) @=? fromRule rule
       ]
-   , testGroup "pretty (Pretty instance)" 
+   , testGroup "pretty (Pretty instance)"
     [ testCase "BuildContent type" $ do
         example1 `assertPrettyEqual` BuildRule "hoge" []
         example2 `assertPrettyEqual` BuildRule "hoge" [(Nothing, RuleArgString "hogege1")]

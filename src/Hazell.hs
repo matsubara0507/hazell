@@ -2,17 +2,19 @@ module Hazell
     ( generate
     ) where
 
-import Bazel.Build (BuildFile, BuildContent (..), isRule, fromRule)
-import Bazel.Haskell
-import qualified Bazel.Parser as Bazel
-import Data.Functor ((<&>))
-import qualified Data.Text.IO as Text
-import Hazell.Env
-import Prettyprinter (pretty, layoutPretty, defaultLayoutOptions, vsep)
-import Prettyprinter.Render.Text (putDoc, renderStrict)
-import qualified Hpack.Config as Hpack
-import System.FilePath ((</>))
-import Text.Megaparsec (parse)
+import           Bazel.Build               (BuildContent (..), BuildFile,
+                                            fromRule, isRule)
+import           Bazel.Haskell
+import qualified Bazel.Parser              as Bazel
+import           Data.Functor              ((<&>))
+import qualified Data.Text.IO              as Text
+import           Hazell.Env
+import qualified Hpack.Config              as Hpack
+import           Prettyprinter             (defaultLayoutOptions, layoutPretty,
+                                            pretty, vsep)
+import           Prettyprinter.Render.Text (putDoc, renderStrict)
+import           System.FilePath           ((</>))
+import           Text.Megaparsec           (parse)
 
 generate :: Env -> IO ()
 generate env = do

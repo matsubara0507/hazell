@@ -3,8 +3,8 @@ module Hazell.Env
     ) where
 
 data Env = Env
-  { packageYamlPath :: FilePath
-  , stackYamlPath :: FilePath
+  { packageYamlPath  :: FilePath
+  , stackYamlPath    :: FilePath
   , bazelProjectPath :: FilePath
-  , bazelBuildPath :: FilePath
+  , bazelBuildPath   :: FilePath
   }

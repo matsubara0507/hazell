@@ -1,17 +1,18 @@
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Bazel.Parser where
 
-import Bazel.Build (BuildFile, BuildContent (..))
-import Bazel.Rule (RuleArg (..))
-import Control.Monad (MonadPlus)
-import Data.Functor (($>))
-import Data.Text (Text)
-import qualified Data.Text as Text
-import Data.Void (Void)
-import Text.Megaparsec
-import Text.Megaparsec.Char (newline, space, hspace, char, letterChar, digitChar, printChar, string)
+import           Bazel.Build          (BuildContent (..), BuildFile)
+import           Bazel.Rule           (RuleArg (..))
+import           Control.Monad        (MonadPlus)
+import           Data.Functor         (($>))
+import           Data.Text            (Text)
+import qualified Data.Text            as Text
+import           Data.Void            (Void)
+import           Text.Megaparsec
+import           Text.Megaparsec.Char (char, digitChar, hspace, letterChar,
+                                       newline, printChar, space, string)
 
 parseBuildFile :: Text -> Maybe BuildFile
 parseBuildFile = parseMaybe buildFileParser

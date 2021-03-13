@@ -5,8 +5,8 @@ module Bazel.Haskell
     , buildHaskellLibraryRule
     ) where
 
-import Bazel.Rule (Rule(..), RuleArg(..))
-import qualified Data.Map as Map
+import           Bazel.Rule   (Rule (..), RuleArg (..))
+import qualified Data.Map     as Map
 import qualified Hpack.Config as Hpack
 
 buildStackSnapshotRule :: Hpack.Package -> String -> Rule
