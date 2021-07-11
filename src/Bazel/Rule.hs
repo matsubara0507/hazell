@@ -9,6 +9,8 @@ module Bazel.Rule
     , isStringArg
     ) where
 
+import           Data.Map      (Map)
+import qualified Data.Map      as Map
 import           Data.String   (fromString)
 import           Prettyprinter
 
@@ -28,6 +30,7 @@ data RuleArg
   = RuleArgString String
   | RuleArgBool Bool
   | RuleArgArray [RuleArg]
+  | RuleArgDict (Map String RuleArg)
   | RuleArgConst String
   | RuleArgGlob String
   deriving (Show, Eq)
@@ -45,8 +48,12 @@ instance Pretty RuleArg where
   pretty (RuleArgArray [])    = "[]"
   pretty (RuleArgArray [arg]) = "[" <> pretty arg <> "]"
   pretty (RuleArgArray args)  = vsep [nest 4 $ vsep ("[" : map ((<> ",") . pretty) args), "]"]
+  pretty (RuleArgDict dict)   = vsep [nest 4 $ vsep ("{" : pretteyDict dict), "}"]
   pretty (RuleArgConst name)  = fromString name
   pretty (RuleArgGlob path)   = "glob([" <> fromString (show path) <> "])"
+
+pretteyDict :: Map String RuleArg -> [Doc ann]
+pretteyDict = map (\(k, v) -> fromString (show k) <> ": " <> pretty v <> ",") . Map.toList
 
 prettyMethodCall :: String -> [Doc ann] -> Doc ann
 prettyMethodCall name []    = fromString name <> "()"

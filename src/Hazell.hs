@@ -6,7 +6,9 @@ import           Bazel.Build               (BuildContent (..), BuildFile,
                                             fromRule, isRule)
 import           Bazel.Haskell
 import qualified Bazel.Parser              as Bazel
+import           Bazel.Rule                (Rule (..))
 import           Data.Functor              ((<&>))
+import           Data.List                 (find)
 import qualified Data.Text.IO              as Text
 import           Hazell.Env
 import qualified Hpack.Config              as Hpack
@@ -45,7 +47,7 @@ replaceStackSnapshotRule package stackSnapshotPath ws =
   if any (`isRule` stackSnapshotRule) ws then
     ws <&> \content ->
       if content `isRule` stackSnapshotRule then
-        stackSnapshotContent
+        content `overrideRuleArgs` stackSnapshotRule
       else
         content
   else
@@ -53,6 +55,14 @@ replaceStackSnapshotRule package stackSnapshotPath ws =
   where
     stackSnapshotRule = buildStackSnapshotRule package stackSnapshotPath
     (loadContent, stackSnapshotContent) = fromRule stackSnapshotRule
+
+overrideRuleArgs :: BuildContent -> Rule -> BuildContent
+overrideRuleArgs (BuildRule name args) rule =
+  BuildRule name $ args <&> \(key, val) ->
+    case find (\(k, _) -> k == key) (ruleArgs rule) of
+      Nothing     -> (key, val)
+      Just (_, v) -> (key, v)
+overrideRuleArgs content _ = content
 
 generateBuildFile :: Env -> Hpack.Package -> IO ()
 generateBuildFile env package = do
