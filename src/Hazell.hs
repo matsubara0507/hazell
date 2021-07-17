@@ -4,18 +4,21 @@ module Hazell
 
 import           Bazel.Build               (BuildContent (..), BuildFile,
                                             fromRule, isRule)
+import           Bazel.Cabal               (CabalPackage, readAllCabalFiles)
 import           Bazel.Haskell
 import qualified Bazel.Parser              as Bazel
 import           Bazel.Rule                (Rule (..))
 import           Data.Functor              ((<&>))
 import           Data.List                 (find)
+import qualified Data.Map                  as Map
+import qualified Data.Map.Merge.Lazy       as Map
 import qualified Data.Text.IO              as Text
 import           Hazell.Env
 import qualified Hpack.Config              as Hpack
 import           Prettyprinter             (defaultLayoutOptions, layoutPretty,
                                             pretty, vsep)
 import           Prettyprinter.Render.Text (putDoc, renderStrict)
-import           System.FilePath           ((</>))
+import           System.FilePath           (takeDirectory, (</>))
 import           Text.Megaparsec           (parse)
 
 generate :: Env -> IO ()
@@ -37,32 +40,39 @@ generateWorkspaceFile env package stackSnapshot = do
   case parse Bazel.buildFileParser path ws of
     Left err ->
       fail $ show err
-    Right w ->
-      let ws' = replaceStackSnapshotRule package stackSnapshot w
+    Right w -> do
+      cabals <-
+        if recReadCabals env then
+          Just <$> readAllCabalFiles (takeDirectory $ packageYamlPath env)
+        else
+          pure Nothing
+      let ws' = replaceStackSnapshotRule package stackSnapshot cabals w
           pws = vsep $ map pretty (ws' ++ [BuildNewline])
-      in Text.writeFile path $ renderStrict (layoutPretty defaultLayoutOptions pws)
+      Text.writeFile path $ renderStrict (layoutPretty defaultLayoutOptions pws)
 
-replaceStackSnapshotRule :: Hpack.Package -> FilePath -> BuildFile -> BuildFile
-replaceStackSnapshotRule package stackSnapshotPath ws =
+replaceStackSnapshotRule :: Hpack.Package -> FilePath -> Maybe [CabalPackage] -> BuildFile -> BuildFile
+replaceStackSnapshotRule package stackSnapshotPath cabals ws =
   if any (`isRule` stackSnapshotRule) ws then
     ws <&> \content ->
       if content `isRule` stackSnapshotRule then
-        content `overrideRuleArgs` stackSnapshotRule
+        content `mergeRuleArgs` stackSnapshotRule
       else
         content
   else
     ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
   where
-    stackSnapshotRule = buildStackSnapshotRule package stackSnapshotPath
+    stackSnapshotRule = buildStackSnapshotRule package stackSnapshotPath cabals
     (loadContent, stackSnapshotContent) = fromRule stackSnapshotRule
 
-overrideRuleArgs :: BuildContent -> Rule -> BuildContent
-overrideRuleArgs (BuildRule name args) rule =
-  BuildRule name $ args <&> \(key, val) ->
-    case find (\(k, _) -> k == key) (ruleArgs rule) of
-      Nothing     -> (key, val)
-      Just (_, v) -> (key, v)
-overrideRuleArgs content _ = content
+mergeRuleArgs :: BuildContent -> Rule -> BuildContent
+mergeRuleArgs (BuildRule name args) rule =
+  BuildRule name . Map.toList $ Map.merge
+    Map.preserveMissing
+    Map.preserveMissing
+    (Map.zipWithMatched $ \_ old new -> new)
+    (Map.fromList args)
+    (Map.fromList $ ruleArgs rule)
+mergeRuleArgs content _ = content
 
 generateBuildFile :: Env -> Hpack.Package -> IO ()
 generateBuildFile env package = do

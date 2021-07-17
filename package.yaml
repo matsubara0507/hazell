@@ -12,13 +12,22 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/matsubara0507/hazell#readme>
 
 dependencies:
+- aeson
 - base >= 4.7 && < 5
+- bytestring
+- Cabal
 - containers
+- deriving-aeson
 - filepath
 - hpack
+- http-client
+- http-client-tls
+- http-types
 - megaparsec
 - prettyprinter
+- process
 - text
+- xml-conduit # for test
 
 library:
   source-dirs: src

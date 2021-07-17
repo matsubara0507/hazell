@@ -5,12 +5,14 @@ module Bazel.Haskell
     , buildHaskellLibraryRule
     ) where
 
+import           Bazel.Cabal  (CabalPackage)
+import qualified Bazel.Cabal  as Cabal
 import           Bazel.Rule   (Rule (..), RuleArg (..))
 import qualified Data.Map     as Map
 import qualified Hpack.Config as Hpack
 
-buildStackSnapshotRule :: Hpack.Package -> String -> Rule
-buildStackSnapshotRule package localSnapshot = Rule { .. }
+buildStackSnapshotRule :: Hpack.Package -> String -> Maybe [CabalPackage] -> Rule
+buildStackSnapshotRule package localSnapshot cabals = Rule { .. }
   where
     ruleName = "stack_snapshot"
     ruleDef = "@rules_haskell//haskell:cabal.bzl"
@@ -18,9 +20,50 @@ buildStackSnapshotRule package localSnapshot = Rule { .. }
       [ (Just "name", RuleArgString "stackage")
       , (Just "packages", RuleArgArray $ map RuleArgString dependencies)
       , (Just "local_snapshot", RuleArgString $ "//:" <> localSnapshot)
-      ]
+      ] ++ setupDeps
     dependencies =
       filter (/= Hpack.packageName package) $ map fst (Hpack.packageDependencies package)
+    setupDeps = case cabals of
+      Nothing ->
+        []
+      Just cs ->
+        let deps = [(Cabal.toPackageName c, RuleArgArray ds) | c <- cs, let ds = toSetupDepsArg c, not (null ds)]
+        in [(Just "setup_deps", RuleArgDict $ Map.fromList deps)]
+    toSetupDepsArg =
+      fmap RuleArgString . filter (not . (`elem` ghcPkgs)) . Cabal.toSetupDeps
+
+ghcPkgs :: [String]
+ghcPkgs =
+  [ "Cabal"
+  , "array"
+  , "base"
+  , "bin-package-db"
+  , "binary"
+  , "bytestring"
+  , "containers"
+  , "directory"
+  , "extensible-exceptions"
+  , "ffi"
+  , "filepath"
+  , "ghc-prim"
+  , "haskeline"
+  , "haskell98"
+  , "hpc"
+  , "integer-gmp"
+  , "mtl"
+  , "old-locale"
+  , "old-time"
+  , "pretty"
+  , "process"
+  , "random"
+  , "rts"
+  , "syb"
+  , "template-haskell"
+  , "terminfo"
+  , "time"
+  , "unix"
+  ,  "utf8-string"
+  ]
 
 -- ToDo: GHC_FLAGS
 buildHaskellLibraryRule :: Hpack.Package -> Rule

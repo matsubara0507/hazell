@@ -7,4 +7,5 @@ data Env = Env
   , stackYamlPath    :: FilePath
   , bazelProjectPath :: FilePath
   , bazelBuildPath   :: FilePath
+  , recReadCabals    :: Bool
   }

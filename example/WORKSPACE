@@ -36,18 +36,30 @@ load(
 )
 
 stack_snapshot(
+    local_snapshot = "//:stack-snapshot.yaml",
     name = "stackage",
     packages = [
+        "aeson",
         "base",
+        "bytestring",
+        "Cabal",
         "containers",
+        "deriving-aeson",
         "filepath",
         "here",
         "hpack",
+        "http-client",
+        "http-client-tls",
+        "http-types",
         "megaparsec",
         "prettyprinter",
+        "process",
         "tasty",
         "tasty-hunit",
         "text",
+        "xml-conduit",
     ],
-    local_snapshot = "//:stack-snapshot.yaml",
+    setup_deps = {
+        "xml-conduit": ["cabal-doctest"],
+    },
 )

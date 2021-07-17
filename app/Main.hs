@@ -23,6 +23,7 @@ main = do
       , filePathOption "package-yaml" PackageYamlPath (Hazell.packageYamlPath defaultEnv) "package.yaml"
       , filePathOption "stack-yaml" StackYamlPath (Hazell.stackYamlPath defaultEnv) "stack.yaml"
       , filePathOption' "build" BazelBuildPath (Hazell.bazelBuildPath defaultEnv) "PATH for BUILD.bazel from bazel project root (default is BUILD.bazel)"
+      , Option ['r'] ["recursive"] (NoArg Recursive) "Read all dependent cabal files to build files for bazel (e.g. for setup_deps)"
       ]
     cmd o n
       | Help `elem` o    = putStrLn usage
@@ -48,12 +49,14 @@ filePathOption'
 filePathOption' optStr f defaultPath =
   Option [] [optStr] (OptArg (f . fromMaybe defaultPath) "PATH")
 
+
 data Flag
   = Version
   | Help
   | PackageYamlPath FilePath
   | StackYamlPath FilePath
   | BazelBuildPath FilePath
+  | Recursive
   deriving (Show, Eq)
 
 defaultEnv :: Hazell.Env
@@ -62,6 +65,7 @@ defaultEnv = Hazell.Env
   , Hazell.stackYamlPath    = "./stack.yaml"
   , Hazell.bazelProjectPath = "./"
   , Hazell.bazelBuildPath   = "BUILD.bazel"
+  , Hazell.recReadCabals    = False
   }
 
 toEnv :: Maybe FilePath -> [Flag] -> Hazell.Env
@@ -71,5 +75,6 @@ toEnv project =
     go env ((PackageYamlPath path):fs) = go (env { Hazell.packageYamlPath = path }) fs
     go env ((StackYamlPath path):fs)   = go (env { Hazell.stackYamlPath = path }) fs
     go env ((BazelBuildPath path):fs)  = go (env { Hazell.bazelBuildPath = path }) fs
+    go env (Recursive:fs)              = go (env { Hazell.recReadCabals = True }) fs
     go env (_:fs)                      = go env fs
     go env []                          = env
