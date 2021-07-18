@@ -5,10 +5,12 @@ module Bazel.Haskell
     , buildHaskellLibraryRule
     ) where
 
+import           RIO
+import qualified RIO.Map      as Map
+
 import           Bazel.Cabal  (CabalPackage)
 import qualified Bazel.Cabal  as Cabal
 import           Bazel.Rule   (Rule (..), RuleArg (..))
-import qualified Data.Map     as Map
 import qualified Hpack.Config as Hpack
 
 buildStackSnapshotRule :: Hpack.Package -> String -> Maybe [CabalPackage] -> Rule
@@ -75,10 +77,11 @@ buildHaskellLibraryRule package = Rule { .. }
     buildRuleArgs Nothing = []
     buildRuleArgs (Just lib) =
       [ (Just "name", RuleArgString $ Hpack.packageName package <> "-library")
-      , (Just "src_strip_prefix", RuleArgString $ head (Hpack.sectionSourceDirs lib))
-      , (Just "srcs", RuleArgGlob $ head (Hpack.sectionSourceDirs lib) <> "/**/*.hs")
+      , (Just "src_strip_prefix", RuleArgString $ toSrcDir lib)
+      , (Just "srcs", RuleArgGlob $ toSrcDir lib <> "/**/*.hs")
       , (Just "deps", RuleArgArray $ map RuleArgString (dependencies lib))
       , (Just "compiler_flags", RuleArgConst "GHC_FLAGS")
       ]
     dependencies lib =
       map ("@stackage//:" <>)$ Map.keys (Hpack.unDependencies $ Hpack.sectionDependencies lib)
+    toSrcDir = fromMaybe "src" . listToMaybe . Hpack.sectionSourceDirs

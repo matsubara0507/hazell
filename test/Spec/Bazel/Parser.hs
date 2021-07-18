@@ -5,11 +5,13 @@ module Spec.Bazel.Parser
   ( tests
   ) where
 
+import           RIO
+import           RIO.Text         (pack)
+
 import           Bazel.Build
 import           Bazel.Parser
 import           Bazel.Rule
 import           Data.String.Here
-import           Data.Text        (Text, pack)
 import           Helper           (assertPrettyEqual)
 import           Test.Tasty
 import           Test.Tasty.HUnit

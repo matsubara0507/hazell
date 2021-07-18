@@ -9,8 +9,9 @@ module Bazel.Rule
     , isStringArg
     ) where
 
-import           Data.Map      (Map)
-import qualified Data.Map      as Map
+import           RIO
+import qualified RIO.Map       as Map
+
 import           Data.String   (fromString)
 import           Prettyprinter
 

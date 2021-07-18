@@ -41,11 +41,9 @@ stack_snapshot(
     packages = [
         "aeson",
         "base",
-        "bytestring",
         "Cabal",
         "containers",
         "deriving-aeson",
-        "filepath",
         "here",
         "hpack",
         "http-client",
@@ -53,13 +51,10 @@ stack_snapshot(
         "http-types",
         "megaparsec",
         "prettyprinter",
-        "process",
+        "rio",
         "tasty",
         "tasty-hunit",
-        "text",
-        "xml-conduit",
     ],
     setup_deps = {
-        "xml-conduit": ["cabal-doctest"],
     },
 )

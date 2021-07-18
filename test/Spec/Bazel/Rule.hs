@@ -5,6 +5,8 @@ module Spec.Bazel.Rule
   ( tests
   ) where
 
+import           RIO
+
 import           Bazel.Rule
 import           Data.String.Here
 import           Helper           (assertPrettyEqual)

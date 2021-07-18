@@ -9,9 +9,11 @@ module Bazel.Build
     , fromRule
     ) where
 
+import           RIO
+import qualified RIO.Text      as Text
+
 import           Bazel.Rule
 import           Data.String   (fromString)
-import           Data.Text     (Text, pack, unpack)
 import           Prettyprinter
 
 type BuildFile = [BuildContent]
@@ -23,14 +25,14 @@ data BuildContent
   deriving (Show, Eq)
 
 instance Pretty BuildContent where
-  pretty (BuildRule name args)  = prettyMethodCall (unpack name) (map prettyMethodArg args)
-  pretty (BuildComment comment) = "#" <> fromString (unpack comment)
+  pretty (BuildRule name args)  = prettyMethodCall (Text.unpack name) (map prettyMethodArg args)
+  pretty (BuildComment comment) = "#" <> fromString (Text.unpack comment)
   pretty BuildNewline           = ""
 
 type RuleName = Text
 
 isRule :: BuildContent -> Rule -> Bool
-isRule (BuildRule name _) rule = name == pack (ruleName rule)
+isRule (BuildRule name _) rule = name == Text.pack (ruleName rule)
 isRule _ _                     = False
 
 isLoadRule :: BuildContent -> Rule -> Bool
@@ -45,5 +47,5 @@ fromRule rule =
       [ (Nothing, RuleArgString $ ruleDef rule)
       , (Nothing, RuleArgString $ ruleName rule)
       ]
-  , BuildRule (pack $ ruleName rule) $ ruleArgs rule
+  , BuildRule (Text.pack $ ruleName rule) $ ruleArgs rule
   )

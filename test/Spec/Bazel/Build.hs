@@ -5,6 +5,8 @@ module Spec.Bazel.Build
   ( tests
   ) where
 
+import           RIO
+
 import           Bazel.Build
 import           Bazel.Rule
 import           Data.String.Here

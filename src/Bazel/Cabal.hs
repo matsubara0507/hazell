@@ -14,14 +14,15 @@ module Bazel.Cabal
   , toPackageName
   ) where
 
+import           RIO
+import qualified RIO.ByteString.Lazy                    as BL
+import           RIO.Process                            (HasProcessContext,
+                                                         proc,
+                                                         readProcessStdout_,
+                                                         withWorkingDir)
+import qualified RIO.Text                               as Text
+
 import           Data.Aeson                             as JSON
-import           Data.ByteString                        (ByteString)
-import qualified Data.ByteString.Char8                  as B
-import qualified Data.ByteString.Lazy                   as LB
-import           Data.Maybe                             (catMaybes)
-import           Data.String                            (fromString)
-import           Data.Text                              (Text)
-import qualified Data.Text                              as Text
 import           Data.Version                           (Version)
 import           Deriving.Aeson
 import qualified Distribution.PackageDescription        as Cabal
@@ -34,9 +35,6 @@ import           Network.HTTP.Client                    (Response (responseBody,
                                                          parseRequest)
 import           Network.HTTP.Client.TLS                (tlsManagerSettings)
 import           Network.HTTP.Types                     (Status (Status))
-import           System.Process                         (CreateProcess (cwd),
-                                                         proc,
-                                                         readCreateProcess)
 
 data DotPayload = DotPayload
   { payloadName     :: Text
@@ -55,16 +53,18 @@ data PackageLocation = PackageLocation
   deriving (FromJSON)
   via CustomJSON '[OmitNothingFields, FieldLabelModifier '[StripPrefix "location", CamelToSnake]] PackageLocation
 
-runStackLs :: FilePath -> IO [DotPayload]
+runStackLs
+  :: (HasProcessContext env, HasLogFunc env, MonadReader env m, MonadIO m, HasCallStack)
+  => FilePath -> m [DotPayload]
 runStackLs path = do
-  out <- readCreateProcess ((proc "stack" ["ls", "dependencies", "json", "--test"]) { cwd = Just path }) ""
-  case JSON.eitherDecode (fromString out) of
-    Left e  -> fail (show e)
+  out <- proc "stack" ["ls", "dependencies", "json", "--test"] (withWorkingDir path . readProcessStdout_)
+  case JSON.eitherDecode out of
+    Left e  -> logError (displayShow e) >> pure mempty
     Right a -> pure a
 
 type CabalPackage = Cabal.PackageDescription
 
-readCabalFile :: DotPayload -> IO (Maybe (Either String CabalPackage))
+readCabalFile :: MonadIO m => DotPayload -> m (Maybe (Either String CabalPackage))
 readCabalFile payload =
   case payloadLocation payload of
     (Just (PackageLocation "hackage" url)) -> do
@@ -77,21 +77,23 @@ readCabalFile payload =
       Nothing -> Left $ "cannnot parse to cabal file " ++ packageName
       Just p  -> Right $ Cabal.packageDescription p
 
-get :: String -> IO (Either String ByteString)
+get :: MonadIO m => String -> m (Either String ByteString)
 get url = do
-  manager <- newManager tlsManagerSettings
-  request <- parseRequest url
-  response <- httpLbs request manager
+  manager  <- liftIO $ newManager tlsManagerSettings
+  request  <- liftIO $ parseRequest url
+  response <- liftIO $ httpLbs request manager
   pure $ case responseStatus response of
     Status 200 _ -> do
-      Right (LB.toStrict $ responseBody response)
+      Right (BL.toStrict $ responseBody response)
     status ->
       Left $ "Error while downloading " ++ url ++ " (" ++ formatStatus status ++ ")"
 
 formatStatus :: Status -> String
-formatStatus (Status code message) = show code ++ " " ++ B.unpack message
+formatStatus (Status code message) = show code ++ " " ++ show message
 
-readAllCabalFiles :: FilePath -> IO [CabalPackage]
+readAllCabalFiles
+  :: (HasProcessContext env, HasLogFunc env, MonadReader env m, MonadIO m, HasCallStack)
+  => FilePath -> m [CabalPackage]
 readAllCabalFiles path = do
   deps <- runStackLs path
   catMaybes <$> traverse readCabalFile' deps
@@ -104,7 +106,7 @@ readAllCabalFiles path = do
         Just (Right a) ->
           pure (Just a)
         Just (Left e) ->
-          fail e
+          logError (displayShow e) >> pure Nothing
 
 toSetupDeps :: CabalPackage -> [String]
 toSetupDeps =

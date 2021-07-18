@@ -3,13 +3,14 @@
 
 module Bazel.Parser where
 
+import           RIO                  hiding (many, some, try)
+import qualified RIO.Map              as Map
+import qualified RIO.Text             as Text
+
 import           Bazel.Build          (BuildContent (..), BuildFile)
 import           Bazel.Rule           (RuleArg (..))
 import           Control.Monad        (MonadPlus)
 import           Data.Functor         (($>))
-import qualified Data.Map             as Map
-import           Data.Text            (Text)
-import qualified Data.Text            as Text
 import           Data.Void            (Void)
 import           Text.Megaparsec
 import           Text.Megaparsec.Char (char, digitChar, hspace, letterChar,

@@ -11,23 +11,22 @@ extra-source-files:
 - ChangeLog.md
 description:         Please see the README on GitHub at <https://github.com/matsubara0507/hazell#readme>
 
+default-extensions:
+- NoImplicitPrelude
+
 dependencies:
 - aeson
 - base >= 4.7 && < 5
-- bytestring
 - Cabal
-- containers
 - deriving-aeson
-- filepath
+- containers
 - hpack
 - http-client
 - http-client-tls
 - http-types
 - megaparsec
 - prettyprinter
-- process
-- text
-- xml-conduit # for test
+- rio
 
 library:
   source-dirs: src
