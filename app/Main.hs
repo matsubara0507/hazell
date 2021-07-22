@@ -3,8 +3,8 @@ module Main where
 import           Paths_hazell          (version)
 
 import           RIO
-import qualified RIO.ByteString as B
-import RIO.Process (mkDefaultProcessContext)
+import qualified RIO.ByteString        as B
+import           RIO.Process           (mkDefaultProcessContext)
 
 import           Data.Maybe            (fromMaybe, listToMaybe)
 import           Data.Version          (Version)
@@ -54,7 +54,6 @@ filePathOption'
 filePathOption' optStr f defaultPath =
   Option [] [optStr] (OptArg (f . fromMaybe defaultPath) "PATH")
 
-
 data Flag
   = Version
   | Help
@@ -70,7 +69,6 @@ buildEnv flags defaultEnv = go defaultEnv flags
     go env ((PackageYamlPath path):fs) = go (env { Hazell.packageYamlPath = path }) fs
     go env ((StackYamlPath path):fs)   = go (env { Hazell.stackYamlPath = path }) fs
     go env ((BazelBuildPath path):fs)  = go (env { Hazell.bazelBuildPath = path }) fs
-    go env (Recursive:fs)              = go (env { Hazell.recReadCabals = True }) fs
     go env (_:fs)                      = go env fs
     go env []                          = env
 
@@ -86,6 +84,11 @@ runCmd project flags = do
           , Hazell.stackYamlPath    = "./stack.yaml"
           , Hazell.bazelProjectPath = fromMaybe "./" project
           , Hazell.bazelBuildPath   = "BUILD.bazel"
-          , Hazell.recReadCabals    = False
+          , Hazell.cabalPackages    = Nothing
           }
-    runRIO (buildEnv flags defaultEnv) Hazell.generate
+    runRIO (buildEnv flags defaultEnv) $
+      if Recursive `elem` flags then do
+        cabals <- Hazell.fetchAllCabalPackages
+        local (\env -> env { Hazell.cabalPackages = Just cabals }) Hazell.generate
+      else
+        Hazell.generate

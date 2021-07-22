@@ -2,6 +2,7 @@ module Hazell.Env
     ( Env (..)
     ) where
 
+import           Bazel.Cabal
 import           RIO
 import           RIO.Process (HasProcessContext (..), ProcessContext)
 
@@ -12,7 +13,7 @@ data Env = Env
   , stackYamlPath    :: FilePath
   , bazelProjectPath :: FilePath
   , bazelBuildPath   :: FilePath
-  , recReadCabals    :: Bool
+  , cabalPackages    :: Maybe [CabalPackage]
   }
 
 instance HasLogFunc Env where
@@ -20,3 +21,6 @@ instance HasLogFunc Env where
 
 instance HasProcessContext Env where
   processContextL = lens envProcessCtx (\x y -> x { envProcessCtx = y })
+
+instance HasCabalPackages Env where
+  cabalPackagesL = lens cabalPackages (\x y -> x { cabalPackages = y })

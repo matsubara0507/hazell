@@ -8,6 +8,7 @@ module Bazel.Cabal
   , PackageLocation (..)
   , runStackLs
   , CabalPackage
+  , HasCabalPackages (..)
   , readCabalFile
   , readAllCabalFiles
   , toSetupDeps
@@ -63,6 +64,9 @@ runStackLs path = do
     Right a -> pure a
 
 type CabalPackage = Cabal.PackageDescription
+
+class HasCabalPackages env where
+  cabalPackagesL :: Lens' env (Maybe [CabalPackage])
 
 readCabalFile :: MonadIO m => DotPayload -> m (Maybe (Either String CabalPackage))
 readCabalFile payload =

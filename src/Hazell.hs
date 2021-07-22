@@ -1,5 +1,6 @@
 module Hazell
     ( generate
+    , fetchAllCabalPackages
     ) where
 
 import           RIO
@@ -44,29 +45,23 @@ generateWorkspaceFile package stackSnapshot = do
     Left err ->
       logError (displayShow err)
     Right w -> do
-      cabals <- do
-        flag <- asks recReadCabals
-        if flag then
-          fmap Just . readAllCabalFiles . takeDirectory =<< asks packageYamlPath
-        else
-          pure Nothing
-      let ws' = replaceStackSnapshotRule package stackSnapshot cabals w
-          pws = vsep $ map pretty (ws' ++ [BuildNewline])
+      cabals <- asks cabalPackages
+      ws' <- replaceStackSnapshotRule package stackSnapshot w
+      let pws = vsep $ map pretty (ws' ++ [BuildNewline])
       writeFileUtf8 path $ renderStrict (layoutPretty defaultLayoutOptions pws)
 
-replaceStackSnapshotRule :: Hpack.Package -> FilePath -> Maybe [CabalPackage] -> BuildFile -> BuildFile
-replaceStackSnapshotRule package stackSnapshotPath cabals ws =
+replaceStackSnapshotRule :: Hpack.Package -> FilePath -> BuildFile -> RIO Env BuildFile
+replaceStackSnapshotRule package stackSnapshotPath ws = do
+  stackSnapshotRule <- buildStackSnapshotRule package stackSnapshotPath
+  let (loadContent, stackSnapshotContent) = fromRule stackSnapshotRule
   if any (`isRule` stackSnapshotRule) ws then
-    ws <&> \content ->
+    pure $ ws <&> \content ->
       if content `isRule` stackSnapshotRule then
         content `mergeRuleArgs` stackSnapshotRule
       else
         content
   else
-    ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
-  where
-    stackSnapshotRule = buildStackSnapshotRule package stackSnapshotPath cabals
-    (loadContent, stackSnapshotContent) = fromRule stackSnapshotRule
+    pure $ ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
 
 mergeRuleArgs :: BuildContent -> Rule -> BuildContent
 mergeRuleArgs (BuildRule name args) rule =
@@ -104,3 +99,8 @@ replaceHaskellLibraryRule package build = do
   where
     haskellLibraryRule = buildHaskellLibraryRule package
     (loadContent, haskellLibraryContent) = fromRule haskellLibraryRule
+
+fetchAllCabalPackages :: RIO Env [CabalPackage]
+fetchAllCabalPackages = do
+  path <- asks packageYamlPath
+  readAllCabalFiles (takeDirectory path)

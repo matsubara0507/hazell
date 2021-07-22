@@ -8,29 +8,37 @@ module Bazel.Haskell
 import           RIO
 import qualified RIO.Map      as Map
 
-import           Bazel.Cabal  (CabalPackage)
+import           Bazel.Cabal  (CabalPackage, HasCabalPackages (..))
 import qualified Bazel.Cabal  as Cabal
 import           Bazel.Rule   (Rule (..), RuleArg (..))
 import qualified Hpack.Config as Hpack
 
-buildStackSnapshotRule :: Hpack.Package -> String -> Maybe [CabalPackage] -> Rule
-buildStackSnapshotRule package localSnapshot cabals = Rule { .. }
+buildStackSnapshotRule :: (HasCabalPackages env, MonadReader env m) => Hpack.Package -> String -> m Rule
+buildStackSnapshotRule package localSnapshot = do
+  setupDeps <- buildSetupDeps
+  let ruleArgs = ruleArgs' ++ setupDeps
+  pure $ Rule { .. }
   where
     ruleName = "stack_snapshot"
     ruleDef = "@rules_haskell//haskell:cabal.bzl"
-    ruleArgs =
+    ruleArgs' =
       [ (Just "name", RuleArgString "stackage")
       , (Just "packages", RuleArgArray $ map RuleArgString dependencies)
       , (Just "local_snapshot", RuleArgString $ "//:" <> localSnapshot)
-      ] ++ setupDeps
+      ]
     dependencies =
       filter (/= Hpack.packageName package) $ map fst (Hpack.packageDependencies package)
-    setupDeps = case cabals of
-      Nothing ->
-        []
-      Just cs ->
-        let deps = [(Cabal.toPackageName c, RuleArgArray ds) | c <- cs, let ds = toSetupDepsArg c, not (null ds)]
-        in [(Just "setup_deps", RuleArgDict $ Map.fromList deps)]
+
+buildSetupDeps :: (HasCabalPackages env, MonadReader env m) => m [(Maybe [Char], RuleArg)]
+buildSetupDeps = do
+  cabals <- asks (view cabalPackagesL)
+  pure $ case cabals of
+    Nothing ->
+      []
+    Just cs ->
+      let deps = [(Cabal.toPackageName c, RuleArgArray ds) | c <- cs, let ds = toSetupDepsArg c, not (null ds)]
+      in [(Just "setup_deps", RuleArgDict $ Map.fromList deps)]
+  where
     toSetupDepsArg =
       fmap RuleArgString . filter (not . (`elem` ghcPkgs)) . Cabal.toSetupDeps
 
