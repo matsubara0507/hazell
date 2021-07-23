@@ -55,6 +55,4 @@ stack_snapshot(
         "tasty",
         "tasty-hunit",
     ],
-    setup_deps = {
-    },
 )

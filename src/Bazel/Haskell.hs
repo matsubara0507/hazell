@@ -36,8 +36,11 @@ buildSetupDeps = do
     Nothing ->
       []
     Just cs ->
-      let deps = [(Cabal.toPackageName c, RuleArgArray ds) | c <- cs, let ds = toSetupDepsArg c, not (null ds)]
-      in [(Just "setup_deps", RuleArgDict $ Map.fromList deps)]
+      case [(Cabal.toPackageName c, RuleArgArray ds) | c <- cs, let ds = toSetupDepsArg c, not (null ds)] of
+        [] ->
+          []
+        deps ->
+          [(Just "setup_deps", RuleArgDict $ Map.fromList deps)]
   where
     toSetupDepsArg =
       fmap RuleArgString . filter (not . (`elem` ghcPkgs)) . Cabal.toSetupDeps
