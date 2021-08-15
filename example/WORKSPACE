@@ -42,7 +42,6 @@ stack_snapshot(
         "aeson",
         "base",
         "Cabal",
-        "containers",
         "deriving-aeson",
         "here",
         "hpack",

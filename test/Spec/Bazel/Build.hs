@@ -54,6 +54,22 @@ tests = testGroup "Bazel.Build"
         "# hoge" `assertPrettyEqual` BuildComment " hoge"
         "" `assertPrettyEqual` BuildNewline
     ]
+  , testGroup "mergeRuleArgs" $
+    let
+      newRuleArgs = [(Just "key1", RuleArgBool True), (Just "key2", RuleArgBool True)]
+    in
+      [ testCase "context is not rule" $ do
+          (BuildNewline `mergeRuleArgs` Rule "" "" newRuleArgs) @?= BuildNewline
+          (BuildComment "" `mergeRuleArgs` Rule "" "" newRuleArgs) @?= BuildComment ""
+      , testCase "context rule args is empty" $
+          (BuildRule "abc" [] `mergeRuleArgs` Rule "" "" newRuleArgs) @?= BuildRule "abc" newRuleArgs
+      , testCase "new rule args is empty" $
+          (BuildRule "abc" [(Just "key1", RuleArgBool False)] `mergeRuleArgs` Rule "" "" []) @?= BuildRule "abc" [(Just "key1", RuleArgBool False)]
+      , testCase "duplicated key1 arg" $
+          (BuildRule "abc" [(Just "key1", RuleArgBool False)] `mergeRuleArgs` Rule "" "" newRuleArgs) @?= BuildRule "abc" newRuleArgs
+      , testCase "different keys order" $
+          (BuildRule "abc" [(Just "key2", RuleArgBool False), (Just "key1", RuleArgBool False)] `mergeRuleArgs` Rule "" "" newRuleArgs) @?= BuildRule "abc" [(Just "key2", RuleArgBool True), (Just "key1", RuleArgBool True)]
+      ]
   ]
 
 
