@@ -5,6 +5,7 @@ module Hazell
 
 import           RIO
 import           RIO.FilePath              (takeDirectory, (</>))
+import qualified RIO.List                  as L
 import qualified RIO.Map                   as Map
 import qualified RIO.Text                  as Text
 
@@ -64,13 +65,14 @@ replaceStackSnapshotRule package stackSnapshotPath ws = do
     pure $ ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
 
 mergeRuleArgs :: BuildContent -> Rule -> BuildContent
-mergeRuleArgs (BuildRule name args) rule =
-  BuildRule name . Map.toList $ Map.merge
-    Map.preserveMissing
-    Map.preserveMissing
-    (Map.zipWithMatched $ \_ old new -> new)
-    (Map.fromList args)
-    (Map.fromList $ ruleArgs rule)
+mergeRuleArgs (BuildRule name args) rule = BuildRule name (replaced <> rest')
+  where
+    replace newArgs (key, old) =
+      case Map.lookup key newArgs of
+        Just new -> (Map.delete key newArgs, (key, new))
+        Nothing  -> (newArgs, (key, old))
+    (rest, replaced) = L.mapAccumL replace (Map.fromList $ ruleArgs rule) args
+    rest' = filter (\(k, _) -> Map.member k rest) $ ruleArgs rule
 mergeRuleArgs content _ = content
 
 generateBuildFile :: Hpack.Package -> RIO Env ()
@@ -91,7 +93,7 @@ replaceHaskellLibraryRule package build = do
   if any (`isRule` haskellLibraryRule) build then
     build <&> \content ->
       if content `isRule` haskellLibraryRule then
-        haskellLibraryContent
+        content `mergeRuleArgs` haskellLibraryRule
       else
         content
   else

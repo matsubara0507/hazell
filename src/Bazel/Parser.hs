@@ -64,13 +64,21 @@ buildRuleArgWithoutNameParser :: Parser (Maybe String, RuleArg)
 buildRuleArgWithoutNameParser = (Nothing,) <$> buildRuleArgParser
 
 buildRuleArgParser :: Parser RuleArg
-buildRuleArgParser
-    = buildRuleArgArrayParser
-  <|> buildRuleArgDictParser
-  <|> buildRuleArgBoolParser
-  <|> buildRuleArgStringParser
-  <|> buildRuleArgGlobParser
-  <|> buildRuleArgConstParser
+buildRuleArgParser = do
+  -- ToDo: no use sepBy for more exp
+  args <- buildRuleArgParser' `sepBy1` (space >> char '+' >> space)
+  case args of
+    [arg]         -> pure arg
+    (arg : args') -> pure $ foldl' RuleArgAppend arg args'
+    []            -> fail "Impossible pattern"
+  where
+    buildRuleArgParser'
+        = buildRuleArgArrayParser
+      <|> buildRuleArgDictParser
+      <|> buildRuleArgBoolParser
+      <|> buildRuleArgStringParser
+      <|> buildRuleArgGlobParser
+      <|> buildRuleArgConstParser
 
 buildRuleArgStringParser :: Parser RuleArg
 buildRuleArgStringParser = RuleArgString <$> stringLitParser
