@@ -1,70 +1,90 @@
 module Hazell
     ( generate
+    , fetchAllCabalPackages
     ) where
+
+import           RIO
+import           RIO.FilePath              (takeDirectory, (</>))
+import qualified RIO.Map                   as Map
+import qualified RIO.Text                  as Text
 
 import           Bazel.Build               (BuildContent (..), BuildFile,
                                             fromRule, isRule)
+import           Bazel.Cabal               (CabalPackage, readAllCabalFiles)
 import           Bazel.Haskell
 import qualified Bazel.Parser              as Bazel
+import           Bazel.Rule                (Rule (..))
 import           Data.Functor              ((<&>))
-import qualified Data.Text.IO              as Text
+import           Data.List                 (find)
+import qualified Data.Map.Merge.Strict     as Map
 import           Hazell.Env
 import qualified Hpack.Config              as Hpack
 import           Prettyprinter             (defaultLayoutOptions, layoutPretty,
                                             pretty, vsep)
 import           Prettyprinter.Render.Text (putDoc, renderStrict)
-import           System.FilePath           ((</>))
 import           Text.Megaparsec           (parse)
 
-generate :: Env -> IO ()
-generate env = do
-  let opts = Hpack.defaultDecodeOptions { Hpack.decodeOptionsTarget = packageYamlPath env }
-  result <- Hpack.readPackageConfig opts
+generate :: RIO Env ()
+generate = do
+  path <- asks packageYamlPath
+  let opts = Hpack.defaultDecodeOptions { Hpack.decodeOptionsTarget = path }
+  result <- liftIO $ Hpack.readPackageConfig opts
   case result of
     Left e ->
-      fail e
+      logError (displayShow e)
     Right r -> do
       let package = Hpack.decodeResultPackage r
-      generateWorkspaceFile env package "stack-snapshot.yaml"
-      generateBuildFile env package
+      generateWorkspaceFile package "stack-snapshot.yaml"
+      generateBuildFile package
 
-generateWorkspaceFile :: Env -> Hpack.Package -> FilePath -> IO ()
-generateWorkspaceFile env package stackSnapshot = do
-  let path = bazelProjectPath env </> "WORKSPACE"
-  ws <- Text.readFile path
+generateWorkspaceFile :: Hpack.Package -> FilePath -> RIO Env ()
+generateWorkspaceFile package stackSnapshot = do
+  path <- (</> "WORKSPACE") <$> asks bazelProjectPath
+  ws <- readFileUtf8 path
   case parse Bazel.buildFileParser path ws of
     Left err ->
-      fail $ show err
-    Right w ->
-      let ws' = replaceStackSnapshotRule package stackSnapshot w
-          pws = vsep $ map pretty (ws' ++ [BuildNewline])
-      in Text.writeFile path $ renderStrict (layoutPretty defaultLayoutOptions pws)
+      logError (displayShow err)
+    Right w -> do
+      cabals <- asks cabalPackages
+      ws' <- replaceStackSnapshotRule package stackSnapshot w
+      let pws = vsep $ map pretty (ws' ++ [BuildNewline])
+      writeFileUtf8 path $ renderStrict (layoutPretty defaultLayoutOptions pws)
 
-replaceStackSnapshotRule :: Hpack.Package -> FilePath -> BuildFile -> BuildFile
-replaceStackSnapshotRule package stackSnapshotPath ws =
+replaceStackSnapshotRule :: Hpack.Package -> FilePath -> BuildFile -> RIO Env BuildFile
+replaceStackSnapshotRule package stackSnapshotPath ws = do
+  stackSnapshotRule <- buildStackSnapshotRule package stackSnapshotPath
+  let (loadContent, stackSnapshotContent) = fromRule stackSnapshotRule
   if any (`isRule` stackSnapshotRule) ws then
-    ws <&> \content ->
+    pure $ ws <&> \content ->
       if content `isRule` stackSnapshotRule then
-        stackSnapshotContent
+        content `mergeRuleArgs` stackSnapshotRule
       else
         content
   else
-    ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
-  where
-    stackSnapshotRule = buildStackSnapshotRule package stackSnapshotPath
-    (loadContent, stackSnapshotContent) = fromRule stackSnapshotRule
+    pure $ ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
 
-generateBuildFile :: Env -> Hpack.Package -> IO ()
-generateBuildFile env package = do
+mergeRuleArgs :: BuildContent -> Rule -> BuildContent
+mergeRuleArgs (BuildRule name args) rule =
+  BuildRule name . Map.toList $ Map.merge
+    Map.preserveMissing
+    Map.preserveMissing
+    (Map.zipWithMatched $ \_ old new -> new)
+    (Map.fromList args)
+    (Map.fromList $ ruleArgs rule)
+mergeRuleArgs content _ = content
+
+generateBuildFile :: Hpack.Package -> RIO Env ()
+generateBuildFile package = do
+  env <- ask
   let path = bazelProjectPath env </> bazelBuildPath env
-  build <- Text.readFile path
+  build <- readFileUtf8 path
   case parse Bazel.buildFileParser path build of
     Left err ->
-      fail $ show err
+      logError (displayShow err)
     Right b ->
       let build' = replaceHaskellLibraryRule package b
           pbuild = vsep $ map pretty (build' ++ [BuildNewline])
-      in Text.writeFile path $ renderStrict (layoutPretty defaultLayoutOptions pbuild)
+      in writeFileUtf8 path $ renderStrict (layoutPretty defaultLayoutOptions pbuild)
 
 replaceHaskellLibraryRule :: Hpack.Package -> BuildFile -> BuildFile
 replaceHaskellLibraryRule package build = do
@@ -79,3 +99,8 @@ replaceHaskellLibraryRule package build = do
   where
     haskellLibraryRule = buildHaskellLibraryRule package
     (loadContent, haskellLibraryContent) = fromRule haskellLibraryRule
+
+fetchAllCabalPackages :: RIO Env [CabalPackage]
+fetchAllCabalPackages = do
+  path <- asks packageYamlPath
+  readAllCabalFiles (takeDirectory path)

@@ -36,18 +36,23 @@ load(
 )
 
 stack_snapshot(
+    local_snapshot = "//:stack-snapshot.yaml",
     name = "stackage",
     packages = [
+        "aeson",
         "base",
+        "Cabal",
         "containers",
-        "filepath",
+        "deriving-aeson",
         "here",
         "hpack",
+        "http-client",
+        "http-client-tls",
+        "http-types",
         "megaparsec",
         "prettyprinter",
+        "rio",
         "tasty",
         "tasty-hunit",
-        "text",
     ],
-    local_snapshot = "//:stack-snapshot.yaml",
 )

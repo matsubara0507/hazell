@@ -3,12 +3,14 @@
 
 module Bazel.Parser where
 
+import           RIO                  hiding (many, some, try)
+import qualified RIO.Map              as Map
+import qualified RIO.Text             as Text
+
 import           Bazel.Build          (BuildContent (..), BuildFile)
 import           Bazel.Rule           (RuleArg (..))
 import           Control.Monad        (MonadPlus)
 import           Data.Functor         (($>))
-import           Data.Text            (Text)
-import qualified Data.Text            as Text
 import           Data.Void            (Void)
 import           Text.Megaparsec
 import           Text.Megaparsec.Char (char, digitChar, hspace, letterChar,
@@ -64,6 +66,7 @@ buildRuleArgWithoutNameParser = (Nothing,) <$> buildRuleArgParser
 buildRuleArgParser :: Parser RuleArg
 buildRuleArgParser
     = buildRuleArgArrayParser
+  <|> buildRuleArgDictParser
   <|> buildRuleArgBoolParser
   <|> buildRuleArgStringParser
   <|> buildRuleArgGlobParser
@@ -83,6 +86,22 @@ buildRuleArgArrayParser = do
   space
   arr <- buildRuleArgParser `sepAndEndBy` (comma, space >> char ']')
   pure $ RuleArgArray arr
+
+buildRuleArgDictParser :: Parser RuleArg
+buildRuleArgDictParser = do
+  char '{'
+  space
+  dict <- buildRuleDictMemberParser `sepAndEndBy` (comma, space >> char '}')
+  pure $ RuleArgDict (Map.fromList dict)
+  where
+    buildRuleDictMemberParser :: Parser (String, RuleArg)
+    buildRuleDictMemberParser = do
+      key <- stringLitParser
+      space
+      char ':'
+      space
+      val <- buildRuleArgParser
+      pure (key, val)
 
 buildRuleArgConstParser :: Parser RuleArg
 buildRuleArgConstParser = RuleArgConst <$> nameParser

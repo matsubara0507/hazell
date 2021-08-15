@@ -1,5 +1,7 @@
 module Helper where
 
+import           RIO
+
 import           Prettyprinter
 import           Prettyprinter.Render.String
 import           Test.Tasty.HUnit

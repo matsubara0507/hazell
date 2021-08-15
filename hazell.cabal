@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fd7fce8beb5cd381d0810d61e25e12840e23f917b76da1f01bc21f50eb0e222b
+-- hash: 2574a2dd6c63dcf9ae235ddfe04215479559da88af75e986915b8d821750738d
 
 name:           hazell
 version:        0.1.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Bazel.Build
+      Bazel.Cabal
       Bazel.Haskell
       Bazel.Parser
       Bazel.Rule
@@ -37,14 +38,21 @@ library
       Paths_hazell
   hs-source-dirs:
       src
+  default-extensions:
+      NoImplicitPrelude
   build-depends:
-      base >=4.7 && <5
+      Cabal
+    , aeson
+    , base >=4.7 && <5
     , containers
-    , filepath
+    , deriving-aeson
     , hpack
+    , http-client
+    , http-client-tls
+    , http-types
     , megaparsec
     , prettyprinter
-    , text
+    , rio
   default-language: Haskell2010
 
 executable hazell
@@ -53,15 +61,22 @@ executable hazell
       Paths_hazell
   hs-source-dirs:
       app
+  default-extensions:
+      NoImplicitPrelude
   build-depends:
-      base >=4.7 && <5
+      Cabal
+    , aeson
+    , base >=4.7 && <5
     , containers
-    , filepath
+    , deriving-aeson
     , hazell
     , hpack
+    , http-client
+    , http-client-tls
+    , http-types
     , megaparsec
     , prettyprinter
-    , text
+    , rio
   default-language: Haskell2010
 
 test-suite hazell-test
@@ -75,16 +90,23 @@ test-suite hazell-test
       Paths_hazell
   hs-source-dirs:
       test
+  default-extensions:
+      NoImplicitPrelude
   build-depends:
-      base >=4.7 && <5
+      Cabal
+    , aeson
+    , base >=4.7 && <5
     , containers
-    , filepath
+    , deriving-aeson
     , hazell
     , here
     , hpack
+    , http-client
+    , http-client-tls
+    , http-types
     , megaparsec
     , prettyprinter
+    , rio
     , tasty
     , tasty-hunit
-    , text
   default-language: Haskell2010

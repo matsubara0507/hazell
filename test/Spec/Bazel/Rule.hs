@@ -5,6 +5,9 @@ module Spec.Bazel.Rule
   ( tests
   ) where
 
+import           RIO
+import qualified RIO.Map          as Map
+
 import           Bazel.Rule
 import           Data.String.Here
 import           Helper           (assertPrettyEqual)
@@ -34,6 +37,10 @@ tests = testGroup "Bazel.Rule"
         "[]" `assertPrettyEqual` RuleArgArray []
         "[True]" `assertPrettyEqual` RuleArgArray [RuleArgBool True]
         "[\n    True,\n    True,\n]" `assertPrettyEqual` RuleArgArray [RuleArgBool True, RuleArgBool True]
+    , testCase "RuleArg type (RuleArgDict)" $ do
+        "{}" `assertPrettyEqual` RuleArgDict mempty
+        "{\n    \"hoge\": True,\n}" `assertPrettyEqual` RuleArgDict (Map.fromList [("hoge", RuleArgBool True)])
+        "{\n    \"fuga\": True,\n    \"hoge\": True,\n}" `assertPrettyEqual` RuleArgDict (Map.fromList [("hoge", RuleArgBool True), ("fuga", RuleArgBool True)])
     , testCase "RuleArg type (RuleArgConst)" $
         "HO_GE" `assertPrettyEqual` RuleArgConst "HO_GE"
     , testCase "RuleArg type (RuleArgGlob)" $
