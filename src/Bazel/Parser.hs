@@ -131,11 +131,13 @@ comma = do
   space
 
 stringLitParser :: Parser String
-stringLitParser = do
-  char '"'
-  str <- takeWhile1P Nothing (/= '"') -- ToDo: escape "
-  char '"'
-  pure $ Text.unpack str
+stringLitParser = char '"' >> stringLitParser' ""
+  where
+    stringLitParser' :: String -> Parser String
+    stringLitParser' acc = do
+      str <- Text.unpack <$> takeWhileP Nothing (\c -> c /= '"' && c /= '\\')
+      let acc' = acc ++ str
+      (char '"' >> pure acc') <|> (char '\\' >> char '"' >> stringLitParser' (acc' ++ "\""))
 
 -- allow tail-sep
 sepAndEndBy :: MonadPlus m => m a -> (m sep, m end) -> m [a]

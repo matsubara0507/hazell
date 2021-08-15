@@ -29,5 +29,5 @@ haskell_library(
         "@stackage//:prettyprinter",
         "@stackage//:rio",
     ],
-    compiler_flags = ["-DHOGE=1"] + GHC_FLAGS,
+    compiler_flags = ["-DDATA_FILE=\"hoge.txt\""] + GHC_FLAGS,
 )
