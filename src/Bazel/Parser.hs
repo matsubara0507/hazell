@@ -66,7 +66,7 @@ buildRuleArgWithoutNameParser = (Nothing,) <$> buildRuleArgParser
 buildRuleArgParser :: Parser RuleArg
 buildRuleArgParser = do
   -- ToDo: no use sepBy for more exp
-  args <- buildRuleArgParser' `sepBy1` (space >> char '+' >> space)
+  args <- buildRuleArgParser' `sepBy1` try (space >> char '+' >> space)
   case args of
     [arg]         -> pure arg
     (arg : args') -> pure $ foldl' RuleArgAppend arg args'
