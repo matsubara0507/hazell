@@ -64,13 +64,21 @@ buildRuleArgWithoutNameParser :: Parser (Maybe String, RuleArg)
 buildRuleArgWithoutNameParser = (Nothing,) <$> buildRuleArgParser
 
 buildRuleArgParser :: Parser RuleArg
-buildRuleArgParser
-    = buildRuleArgArrayParser
-  <|> buildRuleArgDictParser
-  <|> buildRuleArgBoolParser
-  <|> buildRuleArgStringParser
-  <|> buildRuleArgGlobParser
-  <|> buildRuleArgConstParser
+buildRuleArgParser = do
+  -- ToDo: no use sepBy for more exp
+  args <- buildRuleArgParser' `sepBy1` try (space >> char '+' >> space)
+  case args of
+    [arg]         -> pure arg
+    (arg : args') -> pure $ foldl' RuleArgAppend arg args'
+    []            -> fail "Impossible pattern"
+  where
+    buildRuleArgParser'
+        = buildRuleArgArrayParser
+      <|> buildRuleArgDictParser
+      <|> buildRuleArgBoolParser
+      <|> buildRuleArgStringParser
+      <|> buildRuleArgGlobParser
+      <|> buildRuleArgConstParser
 
 buildRuleArgStringParser :: Parser RuleArg
 buildRuleArgStringParser = RuleArgString <$> stringLitParser
@@ -123,11 +131,13 @@ comma = do
   space
 
 stringLitParser :: Parser String
-stringLitParser = do
-  char '"'
-  str <- takeWhile1P Nothing (/= '"') -- ToDo: escape "
-  char '"'
-  pure $ Text.unpack str
+stringLitParser = char '"' >> stringLitParser' ""
+  where
+    stringLitParser' :: String -> Parser String
+    stringLitParser' acc = do
+      str <- Text.unpack <$> takeWhileP Nothing (\c -> c /= '"' && c /= '\\')
+      let acc' = acc ++ str
+      (char '"' >> pure acc') <|> (char '\\' >> char '"' >> stringLitParser' (acc' ++ "\""))
 
 -- allow tail-sep
 sepAndEndBy :: MonadPlus m => m a -> (m sep, m end) -> m [a]

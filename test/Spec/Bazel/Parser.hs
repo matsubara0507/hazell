@@ -1,9 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 
-module Spec.Bazel.Parser
-  ( tests
-  ) where
+module Spec.Bazel.Parser where
 
 import           RIO
 import qualified RIO.Map          as Map
@@ -105,16 +103,17 @@ tests = testGroup "Bazel.Parser"
     [ testCase "success" $ do
         parseMaybe buildRuleArgStringParser "\"ab c\"" @?= Just (RuleArgString "ab c")
         parseMaybe buildRuleArgStringParser "\"あいう\"" @?= Just (RuleArgString "あいう")
+        parseMaybe buildRuleArgStringParser "\"\"" @?= Just (RuleArgString "")
+        parseMaybe buildRuleArgStringParser "\"\\\"ab c\\\"\"" @?= Just (RuleArgString "\"ab c\"")
     , testCase "failure" $ do
-        parseMaybe buildRuleArgStringParser "\"\"" @?= Nothing
         parseMaybe buildRuleArgStringParser "\"" @?= Nothing
     ]
   , testGroup "buildRuleArgGlobParser"
-    [ testCase "success" $
+    [ testCase "success" $ do
         parseMaybe buildRuleArgGlobParser "glob([\"src/**/*.hs\"])" @?= Just (RuleArgGlob "src/**/*.hs")
+        parseMaybe buildRuleArgGlobParser "glob([\"\"])" @?= Just (RuleArgGlob "")
     , testCase "failure" $ do
         parseMaybe buildRuleArgGlobParser "glob([])" @?= Nothing
-        parseMaybe buildRuleArgGlobParser "glob([\"\"])" @?= Nothing
         parseMaybe buildRuleArgGlobParser "glob(['src/**/*.hs'])" @?= Nothing
     ]
   , testGroup "buildRuleArgConstParser"
@@ -123,6 +122,13 @@ tests = testGroup "Bazel.Parser"
         parseMaybe buildRuleArgConstParser "abc123_" @?= Just (RuleArgConst "abc123_")
     , testCase "failure" $
         parseMaybe buildRuleArgConstParser "ab c" @?= Nothing
+    ]
+  , testGroup "buildRuleArgParser"
+    [ testCase "append list" $ do
+        parseMaybe buildRuleArgParser "[] + []" @?= Just (RuleArgAppend (RuleArgArray []) (RuleArgArray []))
+        parseMaybe buildRuleArgParser "[] + [] + []" @?= Just (RuleArgAppend (RuleArgAppend (RuleArgArray []) (RuleArgArray [])) (RuleArgArray []))
+        parseMaybe buildRuleArgParser "[] + True" @?= Just (RuleArgAppend (RuleArgArray []) (RuleArgBool True)) -- but actual error by bazel
+        parseMaybe buildRuleArgParser "GHC_FLAGS + [\"-XHoge\"]" @?= Just (RuleArgAppend (RuleArgConst "GHC_FLAGS") (RuleArgArray [RuleArgString "-XHoge"]))
     ]
   ]
 

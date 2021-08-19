@@ -7,9 +7,12 @@ module Bazel.Build
     , isRule
     , isLoadRule
     , fromRule
+    , mergeRuleArgs
     ) where
 
 import           RIO
+import qualified RIO.List      as L
+import qualified RIO.Map       as Map
 import qualified RIO.Text      as Text
 
 import           Bazel.Rule
@@ -49,3 +52,14 @@ fromRule rule =
       ]
   , BuildRule (Text.pack $ ruleName rule) $ ruleArgs rule
   )
+
+mergeRuleArgs :: BuildContent -> Rule -> BuildContent
+mergeRuleArgs (BuildRule name args) rule = BuildRule name (replaced <> rest')
+  where
+    replace newArgs (key, old) =
+      case Map.lookup key newArgs of
+        Just new -> (Map.delete key newArgs, (key, new))
+        Nothing  -> (newArgs, (key, old))
+    (rest, replaced) = L.mapAccumL replace (Map.fromList $ ruleArgs rule) args
+    rest' = filter (\(k, _) -> Map.member k rest) $ ruleArgs rule
+mergeRuleArgs content _ = content

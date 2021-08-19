@@ -19,7 +19,6 @@ haskell_library(
         "@stackage//:Cabal",
         "@stackage//:aeson",
         "@stackage//:base",
-        "@stackage//:containers",
         "@stackage//:deriving-aeson",
         "@stackage//:hpack",
         "@stackage//:http-client",
@@ -29,5 +28,5 @@ haskell_library(
         "@stackage//:prettyprinter",
         "@stackage//:rio",
     ],
-    compiler_flags = GHC_FLAGS,
+    compiler_flags = ["-DDATA_FILE=\"hoge.txt\""] + GHC_FLAGS,
 )

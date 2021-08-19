@@ -5,18 +5,16 @@ module Hazell
 
 import           RIO
 import           RIO.FilePath              (takeDirectory, (</>))
-import qualified RIO.Map                   as Map
 import qualified RIO.Text                  as Text
 
 import           Bazel.Build               (BuildContent (..), BuildFile,
-                                            fromRule, isRule)
+                                            fromRule, isRule, mergeRuleArgs)
 import           Bazel.Cabal               (CabalPackage, readAllCabalFiles)
 import           Bazel.Haskell
 import qualified Bazel.Parser              as Bazel
 import           Bazel.Rule                (Rule (..))
 import           Data.Functor              ((<&>))
 import           Data.List                 (find)
-import qualified Data.Map.Merge.Strict     as Map
 import           Hazell.Env
 import qualified Hpack.Config              as Hpack
 import           Prettyprinter             (defaultLayoutOptions, layoutPretty,
@@ -63,16 +61,6 @@ replaceStackSnapshotRule package stackSnapshotPath ws = do
   else
     pure $ ws ++ [BuildNewline, loadContent, BuildNewline, stackSnapshotContent]
 
-mergeRuleArgs :: BuildContent -> Rule -> BuildContent
-mergeRuleArgs (BuildRule name args) rule =
-  BuildRule name . Map.toList $ Map.merge
-    Map.preserveMissing
-    Map.preserveMissing
-    (Map.zipWithMatched $ \_ old new -> new)
-    (Map.fromList args)
-    (Map.fromList $ ruleArgs rule)
-mergeRuleArgs content _ = content
-
 generateBuildFile :: Hpack.Package -> RIO Env ()
 generateBuildFile package = do
   env <- ask
@@ -91,7 +79,7 @@ replaceHaskellLibraryRule package build = do
   if any (`isRule` haskellLibraryRule) build then
     build <&> \content ->
       if content `isRule` haskellLibraryRule then
-        haskellLibraryContent
+        content `mergeRuleArgs` haskellLibraryRule
       else
         content
   else

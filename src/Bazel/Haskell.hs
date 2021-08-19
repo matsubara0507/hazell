@@ -78,7 +78,6 @@ ghcPkgs =
   ,  "utf8-string"
   ]
 
--- ToDo: GHC_FLAGS
 buildHaskellLibraryRule :: Hpack.Package -> Rule
 buildHaskellLibraryRule package = Rule { .. }
   where
@@ -91,7 +90,7 @@ buildHaskellLibraryRule package = Rule { .. }
       , (Just "src_strip_prefix", RuleArgString $ toSrcDir lib)
       , (Just "srcs", RuleArgGlob $ toSrcDir lib <> "/**/*.hs")
       , (Just "deps", RuleArgArray $ map RuleArgString (dependencies lib))
-      , (Just "compiler_flags", RuleArgConst "GHC_FLAGS")
+      -- , (Just "compiler_flags", RuleArgConst "GHC_FLAGS")
       ]
     dependencies lib =
       map ("@stackage//:" <>)$ Map.keys (Hpack.unDependencies $ Hpack.sectionDependencies lib)

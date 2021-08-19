@@ -34,6 +34,7 @@ data RuleArg
   | RuleArgDict (Map String RuleArg)
   | RuleArgConst String
   | RuleArgGlob String
+  | RuleArgAppend RuleArg RuleArg
   deriving (Show, Eq)
 
 instance Pretty Rule where
@@ -43,24 +44,25 @@ instance Pretty Rule where
       callRule = prettyMethodCall name (map prettyMethodArg args)
 
 instance Pretty RuleArg where
-  pretty (RuleArgString str)  = fromString (show str)
-  pretty (RuleArgBool True)   = "True"
-  pretty (RuleArgBool False)  = "False"
-  pretty (RuleArgArray [])    = "[]"
-  pretty (RuleArgArray [arg]) = "[" <> pretty arg <> "]"
-  pretty (RuleArgArray args)  = vsep [nest 4 $ vsep ("[" : map ((<> ",") . pretty) args), "]"]
-  pretty (RuleArgDict dict)   = pretteyDict dict
-  pretty (RuleArgConst name)  = fromString name
-  pretty (RuleArgGlob path)   = "glob([" <> fromString (show path) <> "])"
+  pretty (RuleArgString str)   = fromString (show str)
+  pretty (RuleArgBool True)    = "True"
+  pretty (RuleArgBool False)   = "False"
+  pretty (RuleArgArray [])     = "[]"
+  pretty (RuleArgArray [arg])  = "[" <> pretty arg <> "]"
+  pretty (RuleArgArray args)   = vsep [nest 4 $ vsep ("[" : map ((<> ",") . pretty) args), "]"]
+  pretty (RuleArgDict dict)    = prettyDict dict
+  pretty (RuleArgConst name)   = fromString name
+  pretty (RuleArgGlob path)    = "glob([" <> fromString (show path) <> "])"
+  pretty (RuleArgAppend a1 a2) = pretty a1 <> " + " <> pretty  a2
 
-pretteyDict :: Map String RuleArg -> Doc ann
-pretteyDict dict =
+prettyDict :: Map String RuleArg -> Doc ann
+prettyDict dict =
   if Map.null dict then
     "{}"
   else
-    vsep [nest 4 $ vsep ("{" : pretteyDict' dict), "}"]
+    vsep [nest 4 $ vsep ("{" : prettyDict' dict), "}"]
   where
-    pretteyDict' = map (\(k, v) -> fromString (show k) <> ": " <> pretty v <> ",") . Map.toList
+    prettyDict' = map (\(k, v) -> fromString (show k) <> ": " <> pretty v <> ",") . Map.toList
 
 prettyMethodCall :: String -> [Doc ann] -> Doc ann
 prettyMethodCall name []    = fromString name <> "()"
